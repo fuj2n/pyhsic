@@ -1,0 +1,147 @@
+import pygame
+import math 
+import random 
+import time
+
+pygame.init() #initialaze kisaltilmisi , baslatmak anlamina gelir
+width = 1366
+hight = 768
+ekran = pygame.display.set_mode((width,hight),pygame.FULLSCREEN)
+running = True
+font = pygame.font.Font(None, 20)
+font1 = pygame.font.Font(None, 70)
+font2 = pygame.font.Font(None, 50)
+
+sayac_zamani = 0
+engel_mesaji = None
+engel_zamani = 0
+fps = pygame.time.Clock()
+karakter = pygame.Rect(720,450,15,15)
+hiz = 0.8
+ivme_sag = 0
+ivme_sol = 0
+ivme_yukari = 0
+ivme_asagi = 0
+drift = 0.1
+ivmelenme = 0.12
+def engel():
+    global sayac_zamani
+    global engel_mesaji
+    global engel_zamani
+    global ivme_sol, ivme_sag, ivme_yukari, ivme_asagi
+    ivme_sol = ivme_sag = ivme_yukari = ivme_asagi = 0
+    engel_mesaji = font1.render("Sınıra Çarptın!", True, (255,255,255))
+    engel_zamani = pygame.time.get_ticks()
+    sayac_zamani = 0    
+    
+
+def kalip(deger, min_deger, max_deger):
+    return max(min(deger, max_deger), min_deger)
+def sinirla(deger, max_deger):
+    if deger > max_deger:
+        return max_deger
+    return deger
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    ekran.fill((0,0,0))
+    basildi_mi = pygame.key.get_pressed()
+    anlik_zaman = pygame.time.get_ticks()
+    basildi_mi = pygame.key.get_pressed()
+    anlik_zaman = pygame.time.get_ticks()
+    if basildi_mi[pygame.K_RIGHT] or basildi_mi[pygame.K_d]:
+        ivme_sag += ivmelenme
+        sinirla(ivme_sag,1) 
+        hiz_sag = ivme_sag * hiz
+        karakter.x += round(hiz_sag)   
+    else:       
+        if ivme_sag > 0:
+            ivme_sag -= drift
+            hiz_sag = ivme_sag * hiz
+            karakter.x += round(hiz_sag)
+
+    if basildi_mi[pygame.K_LEFT] or basildi_mi[pygame.K_a]:
+        ivme_sol += ivmelenme
+        sinirla(ivme_sol,1)
+        hiz_sol = ivme_sol * hiz
+        karakter.x -= round(hiz_sol)
+    else:
+        if ivme_sol > 0:
+            ivme_sol -= drift
+            hiz_sol = ivme_sol * hiz
+            karakter.x -= round(hiz_sol)
+
+    if basildi_mi[pygame.K_UP] or basildi_mi[pygame.K_w]:
+        ivme_yukari += ivmelenme
+        sinirla(ivme_yukari,1)
+        hiz_yukari = ivme_yukari * hiz
+        karakter.y -= round(hiz_yukari)
+    
+    else:
+        if ivme_yukari > 0:
+            ivme_yukari -= drift
+            hiz_yukari = ivme_yukari * hiz
+            karakter.y -= round(hiz_yukari)
+
+                    
+    if basildi_mi[pygame.K_DOWN] or basildi_mi[pygame.K_s]:
+        ivme_asagi += ivmelenme
+        sinirla(ivme_asagi,1)
+        hiz_asagi = ivme_asagi * hiz 
+        karakter.y += round(hiz_asagi)
+    else:
+        if ivme_asagi > 0:
+            ivme_asagi -= drift
+            hiz_asagi = ivme_asagi * hiz
+            karakter.y += round(hiz_asagi)
+
+    if karakter.right >= width:  
+        karakter.right = width
+        engel()
+        karakter.right = width-1  
+    elif karakter.left <= 0:  
+        karakter.left = 0
+        engel()
+        karakter.left = 1
+    elif karakter.top <= 0:  
+        karakter.top = 0
+        engel() 
+        karakter.top = 1
+    elif karakter.bottom >= hight:  
+        karakter.bottom = hight
+        engel()  
+        karakter.bottom = hight-1
+
+    if sayac_zamani >= 0:
+        sayac_zamani = pygame.time.get_ticks() - engel_zamani
+        sayac_zamani = round((pygame.time.get_ticks() - engel_zamani) / 100) / 10
+
+    if engel_mesaji is not None:
+        if pygame.time.get_ticks() - engel_zamani < 2000:  
+            ekran.blit(engel_mesaji, ((width / 2) - 170, hight / 2))
+            anlik_zaman = 0
+        else:
+            engel_mesaji = None
+    
+    karakter.x = kalip(karakter.x, 0, width - karakter.width)  
+    karakter.y = kalip(karakter.y, 0, hight - karakter.height)
+    yazi_asagi = font.render(f"Hiz asagi: {round(ivme_asagi)}", True, (255,255,255))
+    yazi_yukari = font.render(f"Hiz yukari: {round(ivme_yukari)}", True, (255,255,255))
+    yazi_sag = font.render(f"Hiz sag: {round(ivme_sag)}", True, (255,255,255))
+    yazi_sol = font.render(f"Hiz sol: {round(ivme_sol)}", True, (255,255,255))
+    sayac_surface = font2.render(str(sayac_zamani), True, (255, 255, 255))
+    sayac_surface.set_alpha(128)
+    
+    ekran.blit(sayac_surface,((width/2)-40,(hight/2)+70))
+    ekran.blit(yazi_yukari,(1255,20))
+    ekran.blit(yazi_asagi,(1255,40))
+    ekran.blit(yazi_sag,(1255,60))
+    ekran.blit(yazi_sol,(1255,80))
+    pygame.draw.rect(ekran,(255,255,255),karakter)
+    pygame.display.flip()
+    fps.tick(60)
+
+pygame.quit()
