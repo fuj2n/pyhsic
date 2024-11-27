@@ -1,0 +1,136 @@
+import pygame
+import math 
+import random 
+import time
+
+pygame.init() #initialization abbreviation, means to start
+width = 1366
+height = 768
+screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
+running = True
+font = pygame.font.Font(None, 20)
+font1 = pygame.font.Font(None, 70)
+collision_message = None
+collision_time = 0
+fps = pygame.time.Clock()
+character = pygame.Rect(720, 450, 15, 15)
+speed = 0.8
+acceleration_right = 0
+acceleration_left = 0
+acceleration_up = 0
+acceleration_down = 0
+drift = 0.1
+acceleration_increment = 0.12
+
+def collision():
+    global collision_message
+    global collision_time
+    global acceleration_left, acceleration_right, acceleration_up, acceleration_down
+    acceleration_left = acceleration_right = acceleration_up = acceleration_down = 0
+    collision_message = font1.render("You hit the boundary!", True, (255, 255, 255))
+    collision_time = pygame.time.get_ticks()    
+
+def clamp(value, min_value, max_value):
+    return max(min(value, max_value), min_value)
+
+def limit(value, max_value):
+    if value > max_value:
+        return max_value
+    return value
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    screen.fill((0, 0, 0))
+    keys_pressed = pygame.key.get_pressed()
+    current_time = pygame.time.get_ticks()
+    keys_pressed = pygame.key.get_pressed()
+    current_time = pygame.time.get_ticks()
+    
+    if keys_pressed[pygame.K_RIGHT] or keys_pressed[pygame.K_d]:
+        acceleration_right += acceleration_increment
+        limit(acceleration_right, 1)
+        speed_right = acceleration_right * speed
+        character.x += round(speed_right)   
+    else:       
+        if acceleration_right > 0:
+            acceleration_right -= drift
+            speed_right = acceleration_right * speed
+            character.x += round(speed_right)
+
+    if keys_pressed[pygame.K_LEFT] or keys_pressed[pygame.K_a]:
+        acceleration_left += acceleration_increment
+        limit(acceleration_left, 1)
+        speed_left = acceleration_left * speed
+        character.x -= round(speed_left)
+    else:
+        if acceleration_left > 0:
+            acceleration_left -= drift
+            speed_left = acceleration_left * speed
+            character.x -= round(speed_left)
+
+    if keys_pressed[pygame.K_UP] or keys_pressed[pygame.K_w]:
+        acceleration_up += acceleration_increment
+        limit(acceleration_up, 1)
+        speed_up = acceleration_up * speed
+        character.y -= round(speed_up)
+    
+    else:
+        if acceleration_up > 0:
+            acceleration_up -= drift
+            speed_up = acceleration_up * speed
+            character.y -= round(speed_up)
+
+    if keys_pressed[pygame.K_DOWN] or keys_pressed[pygame.K_s]:
+        acceleration_down += acceleration_increment
+        limit(acceleration_down, 1)
+        speed_down = acceleration_down * speed 
+        character.y += round(speed_down)
+    else:
+        if acceleration_down > 0:
+            acceleration_down -= drift
+            speed_down = acceleration_down * speed
+            character.y += round(speed_down)
+
+    if character.right >= width:  
+        character.right = width
+        collision()
+        character.right = width - 1  
+    elif character.left <= 0:  
+        character.left = 0
+        collision()
+        character.left = 1
+    elif character.top <= 0:  
+        character.top = 0
+        collision() 
+        character.top = 1
+    elif character.bottom >= height:  
+        character.bottom = height
+        collision()  
+        character.bottom = height - 1
+    
+    if collision_message is not None:
+        if pygame.time.get_ticks() - collision_time < 2000:  
+            screen.blit(collision_message, ((width / 2) - 170, height / 2))
+        else:
+            collision_message = None
+
+    character.x = clamp(character.x, 0, width - character.width)  
+    character.y = clamp(character.y, 0, height - character.height)
+    
+    speed_down_text = font.render(f"Speed down: {round(acceleration_down)}", True, (255, 255, 255))
+    speed_up_text = font.render(f"Speed up: {round(acceleration_up)}", True, (255, 255, 255))
+    speed_right_text = font.render(f"Speed right: {round(acceleration_right)}", True, (255, 255, 255))
+    speed_left_text = font.render(f"Speed left: {round(acceleration_left)}", True, (255, 255, 255))
+
+    screen.blit(speed_up_text, (1255, 20))
+    screen.blit(speed_down_text, (1255, 40))
+    screen.blit(speed_right_text, (1255, 60))
+    screen.blit(speed_left_text, (1255, 80))
+    pygame.draw.rect(screen, (255, 255, 255), character)
+    pygame.display.flip()
+    fps.tick(60)
+
+pygame.quit()
